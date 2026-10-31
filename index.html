@@ -59,7 +59,7 @@ a{color:inherit}
 .card li{margin-bottom:8px;font-size:15px}
 .secret{max-height:0;overflow:hidden;transition:max-height .7s}
 .card.open .secret{max-height:900px}
-.redact{position:absolute;left:0;right:0;height:100%;top:0;background:#000;display:flex;align-items:center;justify-content:center;font:900 26px 'Bodoni Moda';color:var(--red);letter-spacing:.3em;text-shadow:0 0 14px var(--glow);transition:transform .7s;z-index:3;pointer-events:none}
+.redact{position:absolute;left:0;right:0;height:100%;top:0;background:#000;display:flex;align-items:center;justify-content:center;font:900 26px 'Bodoni Moda';color:var(--red);letter-spacing:.3em;text-shadow:0 0 14px var(--glow);transition:transform .7s;z-index:3;cursor:pointer;flex-direction:column;text-align:center}.redact small{font:14px 'Special Elite';letter-spacing:.2em;color:var(--dim);margin-top:10px}.card.open .redact{pointer-events:none}.card{overflow:hidden}
 .card.open .redact{transform:translateX(105%)}
 .card .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .card .btn{padding:8px 14px;font-size:14px}
@@ -69,10 +69,11 @@ form{display:none}
 footer{text-align:center;padding:60px 20px 40px;color:var(--dim);font-size:13px}
 @media(max-width:760px){.about{grid-template-columns:1fr}.photo{max-width:260px;margin:auto}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#crack{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:58;opacity:1;transition:opacity 1.4s}#crack.off{opacity:0}#vtxt{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font:900 clamp(60px,16vw,200px) 'Bodoni Moda',serif;color:#ff1030;letter-spacing:.1em;text-shadow:0 0 40px #f00;opacity:0;pointer-events:none;z-index:59}#vtxt.on{animation:vt 2.6s}@keyframes vt{0%{opacity:0;transform:scale(1.4)}15%{opacity:.9}70%{opacity:.5}100%{opacity:0;transform:scale(1)}}
 </style>
 </head>
 <body>
-<canvas id="fx"></canvas><div id="flash"></div>
+<canvas id="fx"></canvas><div id="flash"></div><canvas id="crack" class="off"></canvas><div id="vtxt"></div>
 
 <header class="hero" id="top">
   <h1 class="title">Ayush Gupta<span>Developer</span></h1>
@@ -80,11 +81,12 @@ footer{text-align:center;padding:60px 20px 40px;color:var(--dim);font-size:13px}
   <div class="btns">
     <button class="btn" id="flip">Enter the Upside Down</button>
     <button class="btn" id="power">Use your powers</button>
+    <button class="btn" id="vecna">Summon Vecna</button>
     <a class="btn" href="#projects">Open the case files</a>
   </div>
   <div id="lights" aria-label="Wall of lights"></div>
   <div id="wall" aria-live="polite"></div>
-  <p class="hint">Click the lights to talk to the other side. Spell R-U-N and see what happens.</p>
+  <p class="hint">Click the lights to talk to the other side. Spell R-U-N, or V-E-C-N-A, and see what happens.</p>
 </header>
 
 <main>
@@ -182,18 +184,20 @@ const PARTY=[
  ['Max','🛹','Fast mover','React.js frontends that move quickly.','buzz'],
  ['Steve','🔨','The protector','RBAC, rate limiting and SSRF protection.','buzz'],
  ['Hopper','🔦','The sheriff','Spring Boot backends, Linux and MySQL.','buzz'],
- ['The Demogorgon','👹','Final boss','Hardest bug in the system. Click to open the portal.','flip']
+ ['The Demogorgon','👹','Final boss','Hardest bug in the system. Click to open the portal.','flip'],
+ ['Vecna','🕰️','The mastermind','Breaks systems apart, so I build ones that heal. Click if you dare.','crack']
 ];
 $('#party-grid').innerHTML=PARTY.map((p,i)=>`<article class="card char" tabindex="0" data-i="${i}"><div style="font-size:44px">${p[1]}</div><h3>${p[0]}</h3><small>${p[2]}</small><p class="ab" style="margin-top:10px;min-height:48px;visibility:hidden">${p[3]}</p></article>`).join('');
-document.querySelectorAll('.char').forEach(c=>{const go=()=>{const p=PARTY[c.dataset.i];c.querySelector('.ab').style.visibility='visible';flash();if(p[4]==='power')$('#power').click();else if(p[4]==='flip')flip();else buzz(180+c.dataset.i*40,.5)};c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter')go()}});
+document.querySelectorAll('.char').forEach(c=>{const go=()=>{const p=PARTY[c.dataset.i];c.querySelector('.ab').style.visibility='visible';flash();if(p[4]==='power')$('#power').click();else if(p[4]==='flip')flip();else if(p[4]==='crack')crack();else buzz(180+c.dataset.i*40,.5)};c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter')go()}});
 
 /* case files */
-$('#cases').innerHTML=PROJECTS.map(p=>`<article class="card"><div class="redact">CLASSIFIED</div>
+$('#cases').innerHTML=PROJECTS.map(p=>`<article class="card"><div class="redact">CLASSIFIED<small>click to declassify</small></div>
 <h3>${p.t}</h3><small>${p.s}</small>
 <div class="secret"><ul>${p.b.map(x=>`<li>${x}</li>`).join('')}</ul></div>
 <div class="row"><button class="btn open">Declassify</button>${p.code?`<a class="btn" target="_blank" rel="noopener" href="${p.code}">Code</a>`:''}${p.live?`<a class="btn" target="_blank" rel="noopener" href="${p.live}">Live</a>`:''}</div></article>`).join('');
 document.querySelectorAll('.open').forEach(b=>b.onclick=()=>{const c=b.closest('.card');c.classList.toggle('open');b.textContent=c.classList.contains('open')?'Reclassify':'Declassify';buzz(c.classList.contains('open')?220:140)});
 
+document.querySelectorAll('.redact').forEach(r=>r.onclick=()=>r.parentElement.querySelector('.btn.open').click());
 /* audio */
 let ac;function buzz(f=120,d=.35){try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.type='sawtooth';o.frequency.value=f;g.gain.setValueAtTime(.06,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
 
@@ -204,11 +208,28 @@ $('#flip').onclick=flip;
 $('#power').onclick=()=>{document.body.classList.remove('shake');void document.body.offsetWidth;document.body.classList.add('shake');flash();buzz(55,.8);
  document.querySelectorAll('.card,.stat,.chip').forEach(e=>{e.classList.add('levit');e.style.setProperty('--x',(Math.random()*40-20)+'px');e.style.setProperty('--y',(Math.random()*40-20)+'px');e.style.setProperty('--r',(Math.random()*10-5)+'deg');setTimeout(()=>{e.style.setProperty('--x','0px');e.style.setProperty('--y','0px');e.style.setProperty('--r','0deg');setTimeout(()=>e.classList.remove('levit'),1300)},1800)})};
 
+/* vecna: cracks spread in from all four sides */
+function crack(){
+ const c=$('#crack'),x=c.getContext('2d'),W=c.width=innerWidth,H=c.height=innerHeight,S=[];
+ c.classList.remove('off');x.clearRect(0,0,W,H);
+ const br=(px,py,a,n,d,t)=>{let x0=px,y0=py;for(let i=0;i<n;i++){a+=(Math.random()-.5)*.9;const l=14+Math.random()*24,x1=x0+Math.cos(a)*l,y1=y0+Math.sin(a)*l;S.push([x0,y0,x1,y1,t,d]);t+=16;x0=x1;y0=y1;if(d>0&&Math.random()<.13)br(x0,y0,a+(Math.random()<.5?-1:1)*(.5+Math.random()),n>>1,d-1,t)}};
+ for(let k=0;k<6;k++){const t=k*70;br(Math.random()*W,0,1.57,36,3,t);br(Math.random()*W,H,-1.57,36,3,t);br(0,Math.random()*H,0,36,3,t);br(W,Math.random()*H,3.14,36,3,t)}
+ const v=$('#vtxt');v.textContent='VECNA';v.className='';void v.offsetWidth;v.className='on';
+ document.body.classList.remove('shake');void document.body.offsetWidth;document.body.classList.add('shake');
+ [0,500,1000,1500].forEach(d=>setTimeout(()=>{buzz(48,.9);flash()},d));
+ S.sort((a,b)=>a[4]-b[4]);let i=0;const t0=performance.now();
+ (function f(){const e=performance.now()-t0;
+  while(i<S.length&&S[i][4]<=e){const s=S[i++];x.lineCap='round';x.shadowColor='#ff1030';x.shadowBlur=14;x.strokeStyle='#ff2a3f';x.lineWidth=1.5+s[5]*1.2;x.beginPath();x.moveTo(s[0],s[1]);x.lineTo(s[2],s[3]);x.stroke();x.shadowBlur=0;x.strokeStyle='#ffd0d0';x.lineWidth=.8;x.stroke()}
+  if(i<S.length||e<3800)requestAnimationFrame(f);else c.classList.add('off')})();
+}
+$('#vecna').onclick=crack;
+
 /* wall of lights */
 const cols=['#ffd23f','#3da9fc','#ff3b3b','#43d675','#ff8ad8','#ff9f1c'];let msg='';
 $('#lights').innerHTML=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map((l,i)=>`<button class="bulb" style="--c:${cols[i%6]}" aria-label="Letter ${l}"><i></i>${l}</button>`).join('');
 document.querySelectorAll('.bulb').forEach(b=>b.onclick=()=>{b.classList.add('on');setTimeout(()=>b.classList.remove('on'),700);msg+=b.textContent;$('#wall').textContent=msg.slice(-24);buzz(300+Math.random()*200,.12);
- if(msg.endsWith('RUN')){msg='';setTimeout(()=>{$('#wall').textContent='';flip()},500)}});
+ if(msg.endsWith('RUN')){msg='';setTimeout(()=>{$('#wall').textContent='';flip()},500)}
+ else if(msg.endsWith('VECNA')){msg='';$('#wall').textContent='';crack()}});
 
 /* spores */
 const cv=$('#fx'),cx=cv.getContext('2d');let P=[];
